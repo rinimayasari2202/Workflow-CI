@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score
 #mlflow.set_tracking_uri("http://127.0.0.1:5000/")
 
 # 2. Create an MLflow Experiment
-mlflow.set_experiment("Student_Grade_Prediction")
+#mlflow.set_experiment("Student_Grade_Prediction")
 
 # 3. Enable Autologging
 mlflow.autolog()
