@@ -30,6 +30,7 @@ jobs:
         run: |
           mlflow run ./MLProject --env-manager=local
         env:
+          MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
 

@@ -1,3 +1,9 @@
+import mlflow
+import dagshub
+
+# Tambahkan baris ini di bagian atas file
+dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
+
 import pandas as pd
 import mlflow
 import mlflow.sklearn
