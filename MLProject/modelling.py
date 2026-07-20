@@ -1,11 +1,10 @@
 import mlflow
 import dagshub
 
-# Tambahkan baris ini di bagian atas file
+# Inisialisasi DagsHub di baris paling atas
 dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
 
 import pandas as pd
-import mlflow
 import mlflow.sklearn
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
