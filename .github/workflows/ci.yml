@@ -37,15 +37,6 @@ jobs:
         id: run_id
         run: echo "RUN_ID=$(ls -t mlruns/0 | head -n1)" >> $GITHUB_ENV
 
-      # Sesuaikan tahapan ini untuk Upload ke GitHub/Google Drive
-      - name: Upload to GitHub
-        run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
-          git add .
-          git commit -m "Add new model artifacts"
-          git push
-
       - name: Build Docker Model
         run: |
           mlflow models build-docker -m "runs:/${{ env.RUN_ID }}/model" -n "my-model-image"
