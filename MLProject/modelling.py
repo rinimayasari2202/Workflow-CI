@@ -1,8 +1,8 @@
 import mlflow
 import dagshub
 
-# Inisialisasi DagsHub di baris paling atas
-dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
+# Inisialisasi menggunakan token langsung agar lolos otorisasi otomatis di GitHub Actions
+dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True, token='ef6340c7c3d1d405d8cd0eb4a0a6db18a8f1168c')
 
 import pandas as pd
 import mlflow.sklearn
