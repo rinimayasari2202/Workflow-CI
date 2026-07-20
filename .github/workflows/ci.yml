@@ -28,7 +28,7 @@ jobs:
 
       - name: Run mlflow project
         run: |
-          mlflow run ./MLProject --no-conda
+          mlflow run ./MLProject --env-manager=local
         env:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
