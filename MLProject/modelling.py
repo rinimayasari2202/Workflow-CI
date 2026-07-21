@@ -61,6 +61,10 @@ def train_and_tune(X_train, y_train):
         # CRITICAL: Save the model so it appears in the 'artifacts' folder
         mlflow.sklearn.log_model(best_model, "model")
         
+        # SIMPAN RUN_ID KE FILE TEKS UNTUK DIBACA CI/CD
+        with open("run_id.txt", "w") as f:
+            f.write(run.info.run_id)
+        
         print(f"Model logged with Run ID: {run.info.run_id}")
         return run.info.run_id
 

@@ -28,9 +28,6 @@ jobs:
 
       - name: Run mlflow project
         run: |
-      - name: Run mlflow project
-        run: |
-          # Jalankan mlflow run dan tangkap output-nya untuk mencatat Run ID aktif
           mlflow run ./MLProject --env-manager=local
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
@@ -43,37 +40,19 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
+          # Ambil Run ID langsung dari file teks yang dibuat modelling.py
+          RUN_ID=$(cat run_id.txt 2>/dev/null || cat MLProject/run_id.txt 2>/dev/null)
+          echo "Building Docker Image for Run ID: $RUN_ID"
+          
           python -c "
-          import mlflow
-          # Mengambil run yang paling mutakhir dan dipastikan memiliki artefak model
-          runs = mlflow.search_runs(
-              order_by=['start_time DESC'],
-              max_results=3
-          )
-          
-          target_run_id = None
-          for idx, row in runs.iterrows():
-              try:
-                  client = mlflow.tracking.MlflowClient()
-                  artifacts = client.list_artifacts(row.run_id)
-                  if any(art.path == 'model' for art in artifacts):
-                      target_run_id = row.run_id
-                      break
-              except Exception:
-                  continue
-          
-          if not target_run_id:
-              raise Exception('Gagal menemukan run yang memiliki artefak model!')
-              
-          print(f'Menggunakan Run ID yang memiliki artefak model valid: {target_run_id}')
-          
           import mlflow.models.python_api as mlflow_api
           mlflow_api.build_docker(
-              model_uri=f'runs:/{target_run_id}/model',
+              model_uri='runs:/$RUN_ID/model',
               name='my-model-image',
               env_manager='local'
           )
           "
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
