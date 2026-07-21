@@ -54,7 +54,6 @@ jobs:
               env_manager='local'
           )
           "
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -65,3 +64,4 @@ jobs:
         run: |
           docker tag my-model-image:latest ${{ secrets.DOCKERHUB_USERNAME }}/my-model-image:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-model-image:latest
+          
