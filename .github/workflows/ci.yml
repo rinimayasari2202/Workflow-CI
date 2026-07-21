@@ -37,10 +37,17 @@ jobs:
       - name: Get latest MLflow run_id
         id: run_id
         run: |
-          # Perintah ini secara otomatis mencari folder run_id terbaru di dalam direktori tracking mlflow
-          LATEST_RUN_ID=$(ls -t mlruns/0 | grep -v 'meta.yaml' | head -n 1)
-          echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
-          echo "Found Run ID: $LATEST_RUN_ID"
+          # Mengambil Run ID terakhir langsung menggunakan python dan mlflow API yang terhubung ke DagsHub
+          python -c "
+          import mlflow
+          runs = mlflow.search_runs(order_by=['start_time DESC'], max_results=1)
+          if not runs.empty:
+              print(f'RUN_ID={runs.iloc[0].run_id}')
+              with open(r'${{ github.env }}', 'a') as f:
+                  f.write(f'RUN_ID={runs.iloc[0].run_id}\n')
+          else:
+              print('No runs found!')
+          "
 
       - name: Build Docker Model
         run: |
