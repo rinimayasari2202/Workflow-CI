@@ -32,6 +32,8 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
+          # Masuk ke folder MLProject terlebih dahulu, lalu jalankan script
+          cd MLProject
           python modelling.py
 
       - name: Build Docker Model from Active Run
@@ -40,7 +42,8 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
-          RUN_ID=$(cat run_id.txt)
+          # Baca Run ID langsung dari dalam folder MLProject
+          RUN_ID=$(cat MLProject/run_id.txt)
           echo "Building Docker Image for Verified Run ID: $RUN_ID"
           
           python -c "
