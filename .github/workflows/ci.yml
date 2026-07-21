@@ -46,14 +46,9 @@ jobs:
           RUN_ID=$(cat MLProject/run_id.txt)
           echo "Building Docker Image for Verified Run ID: $RUN_ID"
           
-          python -c "
-          import mlflow.models.python_api as mlflow_api
-          mlflow_api.build_docker(
-              model_uri='runs:/$RUN_ID/model',
-              name='my-model-image',
-              env_manager='local'
-          )
-          "
+          # Gunakan perintah MLflow CLI murni agar kredensial otomatis terbaca dengan benar
+          mlflow models build-docker -m "runs:/$RUN_ID/model" -n "my-model-image" --env-manager=local
+          
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -64,4 +59,3 @@ jobs:
         run: |
           docker tag my-model-image:latest ${{ secrets.DOCKERHUB_USERNAME }}/my-model-image:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/my-model-image:latest
-          
