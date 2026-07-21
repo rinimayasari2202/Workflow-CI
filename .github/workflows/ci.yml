@@ -42,11 +42,15 @@ jobs:
         run: |
           python -c "
           import mlflow
-          runs = mlflow.search_runs(order_by=['start_time DESC'], max_results=1)
+          runs = mlflow.search_runs(
+              filter_string='status = \"FINISHED\"',
+              order_by=['start_time DESC'],
+              max_results=5
+          )
           if runs.empty:
-              raise Exception('Tidak ditemukan run aktif di DagsHub!')
+              raise Exception('Tidak ada run yang statusnya FINISHED di DagsHub!')
           latest_run_id = runs.iloc[0].run_id
-          print(f'Berhasil mendapatkan Run ID terbaru: {latest_run_id}')
+          print(f'Menggunakan Run ID valid terbaru: {latest_run_id}')
           
           import mlflow.models.python_api as mlflow_api
           mlflow_api.build_docker(
@@ -55,22 +59,11 @@ jobs:
               env_manager='local'
           )
           "
-          
-          import mlflow.models.python_api as mlflow_api
-          mlflow_api.build_docker(
               model_uri=f'runs:/{latest_run_id}/model',
-              image_name='my-model-image',
+              name='my-model-image',
               env_manager='local'
           )
           "
-          else:
-              print('No runs found!')
-          "
-
-      - name: Build Docker Model
-        run: |
-          echo "Using Run ID: ${{ env.RUN_ID }}"
-          mlflow models build-docker -m "runs:/${{ env.RUN_ID }}/model" -n "my-model-image"
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
