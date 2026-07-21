@@ -2,7 +2,7 @@ import mlflow
 import dagshub
 
 # Inisialisasi DagsHub untuk GitHub Actions / CI
-dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
+#dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
 
 import pandas as pd
 import mlflow.sklearn
