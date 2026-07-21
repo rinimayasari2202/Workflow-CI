@@ -51,6 +51,14 @@ jobs:
           import mlflow.models.python_api as mlflow_api
           mlflow_api.build_docker(
               model_uri=f'runs:/{latest_run_id}/model',
+              name='my-model-image',
+              env_manager='local'
+          )
+          "
+          
+          import mlflow.models.python_api as mlflow_api
+          mlflow_api.build_docker(
+              model_uri=f'runs:/{latest_run_id}/model',
               image_name='my-model-image',
               env_manager='local'
           )
