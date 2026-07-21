@@ -1,58 +1,68 @@
 import mlflow
 import dagshub
 
-# Inisialisasi menggunakan token langsung agar lolos otorisasi otomatis di GitHub Actions
-dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True, token='ef6340c7c3d1d405d8cd0eb4a0a6db18a8f1168c')
+# Inisialisasi DagsHub untuk GitHub Actions / CI
+dagshub.init(repo_owner='rinimayasari2202', repo_name='Workflow-CI', mlflow=True)
 
 import pandas as pd
 import mlflow.sklearn
-from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import accuracy_score
 
-# 1. Set the MLflow Tracking URI to your local server
-#mlflow.set_tracking_uri("http://127.0.0.1:5000/")
+# 1. Setup MLflow Experiment
+mlflow.set_experiment("School_Performance_Optimization")
 
-# 2. Create an MLflow Experiment
-#mlflow.set_experiment("Student_Grade_Prediction")
-
-# 3. Enable Autologging
-mlflow.autolog()
-
-# 4. Load the preprocessed dataset
+# 2. Load the preprocessed dataset
 print("Loading data...")
 try:
     data = pd.read_csv("student_cleaned_automated.csv")
 except FileNotFoundError:
-    print("ERROR: File CSV tidak ditemukan di folder ini! Pastikan file sudah di-copy.")
+    print("ERROR: File CSV tidak ditemukan! Pastikan file sudah ada.")
     exit()
 
-print("\nKolom yang terbaca oleh sistem:", data.columns.tolist()[:10], "...(dan lainnya)")
-
-# 5. FOOLPROOF FIX: Jika G3_category hilang tapi G3 ada, kita buat ulang di sini
+# FOOLPROOF FIX: Penanganan kolom target G3_category
 if 'G3_category' not in data.columns:
     if 'G3' in data.columns:
-        print("\nTarget 'G3_category' hilang! Membuat ulang target dari kolom 'G3'...")
         bins = [-1, 9, 15, 20]
         labels = ['Fail', 'Pass', 'Excellent']
         data['G3_category'] = pd.cut(data['G3'], bins=bins, labels=labels)
     else:
-        print("\nERROR FATAL: Kolom 'G3_category' dan 'G3' sama-sama tidak ada. File CSV Anda salah format.")
+        print("ERROR FATAL: Kolom target tidak ditemukan.")
         exit()
 
-# 6. Split features (X) dan target (y)
+# Split features (X) dan target (y)
 X = data.drop(columns=['G3_category', 'G3'], errors='ignore')
 y = data['G3_category']
 
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# 7. Train the Model
-with mlflow.start_run():
-    print("\nTraining the model...")
-    model = RandomForestClassifier(n_estimators=100, random_state=42)
-    model.fit(X_train, y_train)
-    
-    # Predict and calculate accuracy
-    predictions = model.predict(X_test)
-    accuracy = accuracy_score(y_test, predictions)
-    print(f"Model trained successfully! Accuracy: {accuracy:.2f}")
+def train_and_tune(X_train, y_train):
+    # 3. Define the model and parameters for tuning
+    rf = RandomForestClassifier()
+    param_grid = {
+        'n_estimators': [50, 100, 200],
+        'max_depth': [None, 10, 20],
+        'min_samples_split': [2, 5]
+    }
+
+    # 4. Perform Hyperparameter Tuning
+    grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3)
+    grid_search.fit(X_train, y_train)
+
+    # 5. Log to MLflow
+    with mlflow.start_run() as run:
+        best_model = grid_search.best_estimator_
+        
+        # Log parameters and metrics
+        mlflow.log_params(grid_search.best_params_)
+        mlflow.log_metric("best_accuracy", grid_search.best_score_)
+        
+        # CRITICAL: Save the model so it appears in the 'artifacts' folder
+        mlflow.sklearn.log_model(best_model, "model")
+        
+        print(f"Model logged with Run ID: {run.info.run_id}")
+        return run.info.run_id
+
+# Eksekusi fungsi tuning
+run_id = train_and_tune(X_train, y_train)
