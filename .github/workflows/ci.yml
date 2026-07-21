@@ -34,17 +34,27 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
 
-      - name: Get latest MLflow run_id
-        id: run_id
+      - name: Build Docker Model from Latest DagsHub Run
+        env:
+          MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
+          MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
+          MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
-          # Mengambil Run ID terakhir langsung menggunakan python dan mlflow API yang terhubung ke DagsHub
           python -c "
           import mlflow
           runs = mlflow.search_runs(order_by=['start_time DESC'], max_results=1)
-          if not runs.empty:
-              print(f'RUN_ID={runs.iloc[0].run_id}')
-              with open(r'${{ github.env }}', 'a') as f:
-                  f.write(f'RUN_ID={runs.iloc[0].run_id}\n')
+          if runs.empty:
+              raise Exception('Tidak ditemukan run aktif di DagsHub!')
+          latest_run_id = runs.iloc[0].run_id
+          print(f'Berhasil mendapatkan Run ID terbaru: {latest_run_id}')
+          
+          import mlflow.models.python_api as mlflow_api
+          mlflow_api.build_docker(
+              model_uri=f'runs:/{latest_run_id}/model',
+              image_name='my-model-image',
+              env_manager='local'
+          )
+          "
           else:
               print('No runs found!')
           "
