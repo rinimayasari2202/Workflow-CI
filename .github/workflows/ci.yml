@@ -26,13 +26,13 @@ jobs:
       - name: Set MLflow Tracking URI
         run: echo "MLFLOW_TRACKING_URI=${{ secrets.MLFLOW_TRACKING_URI }}" >> $GITHUB_ENV
 
-      - name: Run mlflow project
-        run: |
-          mlflow run ./MLProject --env-manager=local
+      - name: Run Model Training Directly
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
+        run: |
+          python modelling.py
 
       - name: Build Docker Model from Active Run
         env:
@@ -40,9 +40,8 @@ jobs:
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
         run: |
-          # Ambil Run ID langsung dari file teks yang dibuat modelling.py
-          RUN_ID=$(cat run_id.txt 2>/dev/null || cat MLProject/run_id.txt 2>/dev/null)
-          echo "Building Docker Image for Run ID: $RUN_ID"
+          RUN_ID=$(cat run_id.txt)
+          echo "Building Docker Image for Verified Run ID: $RUN_ID"
           
           python -c "
           import mlflow.models.python_api as mlflow_api
