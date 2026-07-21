@@ -28,13 +28,16 @@ jobs:
 
       - name: Run mlflow project
         run: |
+      - name: Run mlflow project
+        run: |
+          # Jalankan mlflow run dan tangkap output-nya untuk mencatat Run ID aktif
           mlflow run ./MLProject --env-manager=local
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
           MLFLOW_TRACKING_PASSWORD: ${{ secrets.MLFLOW_TRACKING_PASSWORD }}
 
-      - name: Build Docker Model from Latest DagsHub Run
+      - name: Build Docker Model from Active Run
         env:
           MLFLOW_TRACKING_URI: https://dagshub.com/rinimayasari2202/Workflow-CI.mlflow
           MLFLOW_TRACKING_USERNAME: ${{ secrets.MLFLOW_TRACKING_USERNAME }}
@@ -42,19 +45,31 @@ jobs:
         run: |
           python -c "
           import mlflow
+          # Mengambil run yang paling mutakhir dan dipastikan memiliki artefak model
           runs = mlflow.search_runs(
-              filter_string='status = \"FINISHED\"',
               order_by=['start_time DESC'],
-              max_results=5
+              max_results=3
           )
-          if runs.empty:
-              raise Exception('Tidak ada run yang statusnya FINISHED di DagsHub!')
-          latest_run_id = runs.iloc[0].run_id
-          print(f'Menggunakan Run ID valid terbaru: {latest_run_id}')
+          
+          target_run_id = None
+          for idx, row in runs.iterrows():
+              try:
+                  client = mlflow.tracking.MlflowClient()
+                  artifacts = client.list_artifacts(row.run_id)
+                  if any(art.path == 'model' for art in artifacts):
+                      target_run_id = row.run_id
+                      break
+              except Exception:
+                  continue
+          
+          if not target_run_id:
+              raise Exception('Gagal menemukan run yang memiliki artefak model!')
+              
+          print(f'Menggunakan Run ID yang memiliki artefak model valid: {target_run_id}')
           
           import mlflow.models.python_api as mlflow_api
           mlflow_api.build_docker(
-              model_uri=f'runs:/{latest_run_id}/model',
+              model_uri=f'runs:/{target_run_id}/model',
               name='my-model-image',
               env_manager='local'
           )
