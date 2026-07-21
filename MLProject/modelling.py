@@ -50,7 +50,7 @@ def train_and_tune(X_train, y_train):
     grid_search = GridSearchCV(estimator=rf, param_grid=param_grid, cv=3)
     grid_search.fit(X_train, y_train)
 
-    # 5. Log to MLflow
+   # 5. Log to MLflow
     with mlflow.start_run() as run:
         best_model = grid_search.best_estimator_
         
@@ -64,6 +64,13 @@ def train_and_tune(X_train, y_train):
         # SIMPAN RUN_ID KE FILE TEKS UNTUK DIBACA CI/CD
         with open("run_id.txt", "w") as f:
             f.write(run.info.run_id)
+            
+        # -- FAIL-PROOF FIX: Simpan model secara lokal untuk Docker Build --
+        import os
+        import shutil
+        if os.path.exists("local_model"):
+            shutil.rmtree("local_model")
+        mlflow.sklearn.save_model(best_model, "local_model")
         
         print(f"Model logged with Run ID: {run.info.run_id}")
         return run.info.run_id
