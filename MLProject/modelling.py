@@ -11,7 +11,7 @@ from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import accuracy_score
 
 # 1. Setup MLflow Experiment
-mlflow.set_experiment("School_Performance_Optimization")
+#mlflow.set_experiment("School_Performance_Optimization")
 
 # 2. Load the preprocessed dataset
 print("Loading data...")
