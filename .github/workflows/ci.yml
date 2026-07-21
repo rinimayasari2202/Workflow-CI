@@ -34,17 +34,14 @@ jobs:
         run: |
           cd MLProject
           
-          # 1. Eksekusi script pelatihan
+          # 1. Eksekusi script pelatihan (Otomatis menyimpan model secara lokal)
           python modelling.py
           RUN_ID=$(cat run_id.txt)
           echo "Verified Run ID: $RUN_ID"
           
-          # 2. Download artefak secara eksplisit untuk menjaga konteks autentikasi DagsHub
-          python -c "from mlflow.artifacts import download_artifacts; download_artifacts(artifact_uri='runs:/$RUN_ID/model', dst_path='.')"
+          # 2. Build Docker langsung dari folder 'local_model' (Bypass proses download DagsHub 100%)
+          mlflow models build-docker -m "local_model" -n "my-model-image" --env-manager=local
           
-          # 3. Build Docker dari direktori lokal (Bypass DagsHub proxy error sepenuhnya)
-          mlflow models build-docker -m "model" -n "my-model-image" --env-manager=local
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
