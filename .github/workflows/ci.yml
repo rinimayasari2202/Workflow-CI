@@ -36,10 +36,15 @@ jobs:
 
       - name: Get latest MLflow run_id
         id: run_id
-        run: echo "RUN_ID=$(ls -t mlruns/0 | head -n1)" >> $GITHUB_ENV
+        run: |
+          # Perintah ini secara otomatis mencari folder run_id terbaru di dalam direktori tracking mlflow
+          LATEST_RUN_ID=$(ls -t mlruns/0 | grep -v 'meta.yaml' | head -n 1)
+          echo "RUN_ID=$LATEST_RUN_ID" >> $GITHUB_ENV
+          echo "Found Run ID: $LATEST_RUN_ID"
 
       - name: Build Docker Model
         run: |
+          echo "Using Run ID: ${{ env.RUN_ID }}"
           mlflow models build-docker -m "runs:/${{ env.RUN_ID }}/model" -n "my-model-image"
 
       - name: Log in to Docker Hub
